@@ -1,4 +1,4 @@
-module github.com/synergye-tecnologia-da-informacao/go-utils
+module github.com/dev-konfido/go-utils
 
 go 1.16
 
