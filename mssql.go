@@ -52,6 +52,7 @@ func (client *MSSQLClient) connect() {
 	client.SQLDatabases = []string{}
 	client.SQLDws = []string{}
 	client.SQLConns = make(map[string]*sql.DB)
+	client.SQLDwConns = make(map[string]*sql.DB)
 	client.DBAbbrevs = make(map[string]string)
 	client.DBTimezones = make(map[string]string)
 
