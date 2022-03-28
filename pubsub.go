@@ -18,6 +18,7 @@ type PubSubClient struct {
 func GetPubSubClient(projectID string, topicOut string) *PubSubClient {
 	client := PubSubClient{}
 
+	client.Topics = map[string]*pubsub.Topic{}
 	client.ProjectID = projectID
 	client.DefaultTopicID = topicOut
 
