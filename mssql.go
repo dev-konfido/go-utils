@@ -13,8 +13,10 @@ import (
 type MSSQLClient struct {
 	SQLConfigJSON  string
 	SQLConns       map[string]*sql.DB
+	SQLDwConns     map[string]*sql.DB
 	SQLCentralConn *sql.DB
 	SQLDatabases   []string
+	SQLDws         []string
 	DBAbbrevs      map[string]string
 	DBTimezones    map[string]string
 }
@@ -22,6 +24,7 @@ type MSSQLClient struct {
 type SQLConfig struct {
 	Central   []SQLConfigItem `json:"central"`
 	Databases []SQLConfigItem `json:"dbs"`
+	Dws       []SQLConfigItem `json:"dws"`
 }
 
 type SQLConfigItem struct {
@@ -47,7 +50,9 @@ func (client *MSSQLClient) connect() {
 	}
 
 	client.SQLDatabases = []string{}
+	client.SQLDws = []string{}
 	client.SQLConns = make(map[string]*sql.DB)
+	client.SQLDwConns = make(map[string]*sql.DB)
 	client.DBAbbrevs = make(map[string]string)
 	client.DBTimezones = make(map[string]string)
 
@@ -70,6 +75,19 @@ func (client *MSSQLClient) connect() {
 		}
 		conn.SetConnMaxLifetime(1 * time.Hour)
 		client.SQLConns[db.Name] = conn
+	}
+
+	for _, db := range sqlConfig.Dws {
+		client.SQLDws = append(client.SQLDws, db.Name)
+		client.DBAbbrevs[db.Name] = db.Index
+		client.DBTimezones[db.Name] = db.Timezone
+
+		conn, err := connectToMSSQLServer(db.ConnectionString)
+		if err != nil {
+			log.Error("SQL Connection failed:", err.Error())
+		}
+		conn.SetConnMaxLifetime(1 * time.Hour)
+		client.SQLDwConns[db.Name] = conn
 	}
 
 	log.Info("MSSQL ok.", client.DBAbbrevs)

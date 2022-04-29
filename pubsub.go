@@ -9,17 +9,18 @@ import (
 )
 
 type PubSubClient struct {
-	ServerClient *pubsub.Client
-	Topic        *pubsub.Topic
-	ProjectID    string
-	TopicID      string
+	ServerClient   *pubsub.Client
+	ProjectID      string
+	DefaultTopicID string
+	Topics         map[string]*pubsub.Topic
 }
 
 func GetPubSubClient(projectID string, topicOut string) *PubSubClient {
 	client := PubSubClient{}
 
+	client.Topics = map[string]*pubsub.Topic{}
 	client.ProjectID = projectID
-	client.TopicID = topicOut
+	client.DefaultTopicID = topicOut
 
 	client.connect()
 
@@ -27,7 +28,7 @@ func GetPubSubClient(projectID string, topicOut string) *PubSubClient {
 }
 
 func (cli *PubSubClient) connect() {
-	log.Info("Connecting to pub sub...", cli.ProjectID, cli.TopicID)
+	log.Info("Connecting to pub sub...", cli.ProjectID, cli.DefaultTopicID)
 
 	ctx := context.Background()
 	var err error
@@ -37,10 +38,18 @@ func (cli *PubSubClient) connect() {
 		panic(err)
 	}
 
-	cli.Topic = cli.ServerClient.Topic(cli.TopicID)
+	cli.Topics[cli.DefaultTopicID] = cli.ServerClient.Topic(cli.DefaultTopicID)
 
 	log.Info("Pub sub ok.")
 
+}
+
+func (cli *PubSubClient) AddTopic(topicID string) {
+	cli.Topics[topicID] = cli.ServerClient.Topic(topicID)
+}
+
+func (cli *PubSubClient) RemoveTopic(topicID string) {
+	delete(cli.Topics, topicID)
 }
 
 func (cli *PubSubClient) Publish(msgType string, msg string) error {
@@ -49,11 +58,16 @@ func (cli *PubSubClient) Publish(msgType string, msg string) error {
 }
 
 func (cli *PubSubClient) PublishWithAttribs(msgType string, msg string, attributes map[string]string) error {
-
-	ctx := context.Background()
 	attributes["type"] = msgType
+	return cli.PublishInTopicWithAttribs(cli.DefaultTopicID, msg, attributes)
+}
 
-	result := cli.Topic.Publish(ctx, &pubsub.Message{
+func (cli *PubSubClient) PublishInTopicWithAttribs(topic string, msg string, attributes map[string]string) error {
+	ctx := context.Background()
+	if _, found := cli.Topics[topic]; !found {
+		cli.AddTopic(topic)
+	}
+	result := cli.Topics[topic].Publish(ctx, &pubsub.Message{
 		Data:       []byte(msg),
 		Attributes: attributes,
 	})
