@@ -127,8 +127,7 @@ func (c *RedisClient) GetInt(key string) int64 {
 	return val
 }
 
-func (c *RedisClient) GetLock(key string, ttl time.Duration) (*redislock.Lock, error) {
-	ctx := context.Background()
+func (c *RedisClient) GetLock(ctx context.Context, key string, ttl time.Duration) (*redislock.Lock, error) {
 
 	// Try to obtain lock.
 	lock, err := c.Locker.Obtain(ctx, key, ttl, nil)
