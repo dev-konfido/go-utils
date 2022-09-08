@@ -42,6 +42,7 @@ func GetElasticClient(urlElastic string, usr string, pwd string) *ElasticClient 
 		elastic.SetURL(urlElastic),
 		elastic.SetSniff(false),
 		elastic.SetErrorLog(log.New()),
+		elastic.SetHealthcheck(false),
 		// elastic.SetInfoLog(log.New(os.Stdout, "", log.LstdFlags)),
 	)
 	if err != nil {
