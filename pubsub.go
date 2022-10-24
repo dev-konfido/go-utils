@@ -45,6 +45,15 @@ func (cli *PubSubClient) connect() {
 }
 
 func (cli *PubSubClient) AddTopic(topicID string) {
+	topic := cli.ServerClient.Topic(topicID)
+	topicExists, err := topic.Exists(context.Background())
+	if err != nil {
+		log.Error("failed to check if topic exists: %v", err)
+		return
+	}
+	if !topicExists {
+		topic, err = pubsubClient.CreateTopic(context.Background(), topicID)
+	}
 	cli.Topics[topicID] = cli.ServerClient.Topic(topicID)
 }
 
