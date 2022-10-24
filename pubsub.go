@@ -52,9 +52,9 @@ func (cli *PubSubClient) AddTopic(topicID string) {
 		return
 	}
 	if !topicExists {
-		topic, err = pubsubClient.CreateTopic(context.Background(), topicID)
+		topic, err = cli.ServerClient.CreateTopic(context.Background(), topicID)
 	}
-	cli.Topics[topicID] = cli.ServerClient.Topic(topicID)
+	cli.Topics[topicID] = topic
 }
 
 func (cli *PubSubClient) RemoveTopic(topicID string) {
