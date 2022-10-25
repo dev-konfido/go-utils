@@ -67,8 +67,8 @@ func (cli *PubSubClient) RemoveTopic(topicName string) {
 
 func (cli *PubSubClient) Subscribe(topicName string, subscriberName string, sync bool) (*pubsub.Subscription, error) {
 	ctx := context.Background()
-	if _, found := cli.Topics[topic]; !found {
-		err := cli.AddTopic(topic)
+	if _, found := cli.Topics[topicName]; !found {
+		err := cli.AddTopic(topicName)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add topic: %v", err)
 		}
@@ -76,13 +76,13 @@ func (cli *PubSubClient) Subscribe(topicName string, subscriberName string, sync
 
 	topic := cli.Topics[topicName]
 
-	sub := pubSubCli.ServerClient.Subscription(subscriberName)
+	sub := cli.ServerClient.Subscription(subscriberName)
 	subExists, err := sub.Exists(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check if sub exists: %v", err)
 	}
 	if !subExists {
-		sub, err = pubSubCli.ServerClient.CreateSubscription(ctx, subscriberName,
+		sub, err = cli.ServerClient.CreateSubscription(ctx, subscriberName,
 			pubsub.SubscriptionConfig{Topic: topic})
 	}
 
