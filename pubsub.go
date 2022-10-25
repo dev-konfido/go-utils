@@ -9,10 +9,10 @@ import (
 )
 
 type PubSubClient struct {
-	ServerClient   *pubsub.Client
-	ProjectID      string
-	DefaultTopicID string
-	Topics         map[string]*pubsub.Topic
+	ServerClient     *pubsub.Client
+	ProjectID        string
+	DefaultTopicName string
+	Topics           map[string]*pubsub.Topic
 }
 
 func GetPubSubClient(projectID string, topicOut string) *PubSubClient {
@@ -20,7 +20,7 @@ func GetPubSubClient(projectID string, topicOut string) *PubSubClient {
 
 	client.Topics = map[string]*pubsub.Topic{}
 	client.ProjectID = projectID
-	client.DefaultTopicID = topicOut
+	client.DefaultTopicName = topicOut
 
 	client.connect()
 
@@ -28,7 +28,7 @@ func GetPubSubClient(projectID string, topicOut string) *PubSubClient {
 }
 
 func (cli *PubSubClient) connect() {
-	log.Info("Connecting to pub sub...", cli.ProjectID, cli.DefaultTopicID)
+	log.Info("Connecting to pub sub...", cli.ProjectID, cli.DefaultTopicName)
 
 	ctx := context.Background()
 	var err error
@@ -38,27 +38,59 @@ func (cli *PubSubClient) connect() {
 		panic(err)
 	}
 
-	cli.Topics[cli.DefaultTopicID] = cli.ServerClient.Topic(cli.DefaultTopicID)
+	cli.Topics[cli.DefaultTopicName] = cli.ServerClient.Topic(cli.DefaultTopicName)
 
 	log.Info("Pub sub ok.")
 
 }
 
-func (cli *PubSubClient) AddTopic(topicID string) {
-	topic := cli.ServerClient.Topic(topicID)
+func (cli *PubSubClient) AddTopic(topicName string) error {
+	topic := cli.ServerClient.Topic(topicName)
 	topicExists, err := topic.Exists(context.Background())
 	if err != nil {
-		log.Error("failed to check if topic exists: %v", err)
-		return
+		return fmt.Errorf("failed to check if topic exists: %v", err)
 	}
 	if !topicExists {
-		topic, err = cli.ServerClient.CreateTopic(context.Background(), topicID)
+		topic, err = cli.ServerClient.CreateTopic(context.Background(), topicName)
+		if err != nil {
+			return fmt.Errorf("failed to create topic: %v", err)
+		}
 	}
-	cli.Topics[topicID] = topic
+	cli.Topics[topicName] = topic
+	return nil
 }
 
-func (cli *PubSubClient) RemoveTopic(topicID string) {
-	delete(cli.Topics, topicID)
+func (cli *PubSubClient) RemoveTopic(topicName string) {
+	cli.Topics[topicName].Stop()
+	delete(cli.Topics, topicName)
+}
+
+func (cli *PubSubClient) Subscribe(topicName string, subscriberName string, sync bool) (*pubsub.Subscription, error) {
+	ctx := context.Background()
+	if _, found := cli.Topics[topic]; !found {
+		err := cli.AddTopic(topic)
+		if err != nil {
+			return nil, fmt.Errorf("failed to add topic: %v", err)
+		}
+	}
+
+	topic := cli.Topics[topicName]
+
+	sub := pubSubCli.ServerClient.Subscription(subscriberName)
+	subExists, err := sub.Exists(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check if sub exists: %v", err)
+	}
+	if !subExists {
+		sub, err = pubSubCli.ServerClient.CreateSubscription(ctx, subscriberName,
+			pubsub.SubscriptionConfig{Topic: topic})
+	}
+
+	sub.ReceiveSettings.Synchronous = sync // sincrono pra evitar concorrencia
+	sub.ReceiveSettings.MaxOutstandingMessages = 1
+
+	return sub, nil
+
 }
 
 func (cli *PubSubClient) Publish(msgType string, msg string) error {
@@ -68,7 +100,7 @@ func (cli *PubSubClient) Publish(msgType string, msg string) error {
 
 func (cli *PubSubClient) PublishWithAttribs(msgType string, msg string, attributes map[string]string) error {
 	attributes["type"] = msgType
-	return cli.PublishInTopicWithAttribs(cli.DefaultTopicID, msg, attributes)
+	return cli.PublishInTopicWithAttribs(cli.DefaultTopicName, msg, attributes)
 }
 
 func (cli *PubSubClient) PublishInTopicWithAttribs(topic string, msg string, attributes map[string]string) error {
