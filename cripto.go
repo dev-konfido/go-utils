@@ -75,7 +75,15 @@ func ValidCheckSumAdler32(data string, chk string, numBytes int) bool {
 	return chkStr == calcChk
 }
 
+/* retorna em hexa */
 func ChkSumAdler32(buffer []byte, bufferSize int, numBytes int) string {
+	retInt := IntChkSumAdler32(buffer, bufferSize)
+	retStr := strings.ToUpper(strconv.FormatInt(int64(retInt), 16))
+	retStr = Lpad(retStr, "0", numBytes)
+	return retStr[len(retStr)-numBytes:]
+}
+
+func IntChkSumAdler32(buffer []byte, bufferSize int) int32 {
 	modAdler := 65521
 	a := 1
 	b := 0
@@ -85,9 +93,7 @@ func ChkSumAdler32(buffer []byte, bufferSize int, numBytes int) string {
 	}
 	b = b << 16
 	retInt := b | a
-	retStr := strings.ToUpper(strconv.FormatInt(int64(retInt), 16))
-	retStr = Lpad(retStr, "0", numBytes)
-	return retStr[len(retStr)-numBytes:]
+	return int32(retInt)
 }
 
 // ECB
