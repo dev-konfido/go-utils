@@ -83,7 +83,7 @@ func ChkSumAdler32(buffer []byte, bufferSize int, numBytes int) string {
 	return retStr[len(retStr)-numBytes:]
 }
 
-func IntChkSumAdler32(buffer []byte, bufferSize int) int32 {
+func IntChkSumAdler32(buffer []byte, bufferSize int) uint32 {
 	modAdler := 65521
 	a := 1
 	b := 0
@@ -93,7 +93,7 @@ func IntChkSumAdler32(buffer []byte, bufferSize int) int32 {
 	}
 	b = b << 16
 	retInt := b | a
-	return int32(retInt)
+	return uint32(retInt)
 }
 
 // ECB
