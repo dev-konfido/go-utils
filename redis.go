@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/bsm/redislock"
@@ -151,31 +150,30 @@ func (c *RedisClient) StructToBin(s interface{}) []byte {
 	return buffer.Bytes()
 }
 
-func (c *RedisClient) GetConfigInt(field string, db string) int64 {
-	keyDb := "cfg_" + field + "_" + db
-	keyDefault := "cfg_" + field + "_geral"
-	val := c.GetInt(keyDb)
-	if val == 0 {
-		val = c.GetInt(keyDefault)
-	}
+func (c *RedisClient) GetConfigInt(instance string, group string, field string) int64 {
+	/*
+		"cfg_gateway_config_al_event_samples_strap_cut"
+		"cfg_gateway_config_se_event_samples_strap_cut_alert"
+		"cfg_gateway_config_rn_event_param_strap_cut_address"
+		"cfg_gateway_config_rn_event_samples_strap_cut"
+	*/
+	keyInst := fmt.Sprintf("cfg_%v_%v_%v", group, instance, field)
+	val := c.GetInt(keyInst)
 	return val
 }
 
-func (c *RedisClient) GetConfigString(key string, param string) string {
+func (c *RedisClient) GetGtwConfigInt(instance string, field string) int64 {
+	return c.GetConfigInt(instance, "gateway_config", field)
+}
 
-	//param:value,param2:value2,...,paramn:valuen
-	val := c.Get("cfg_" + key)
-	if val != "" {
-		params := strings.Split(val, ",")
-		for _, item := range params {
-			tokens := strings.Split(item, ":")
-			if strings.TrimSpace(tokens[0]) == param {
-				return strings.TrimSpace(tokens[1])
-			}
-		}
-	}
+func (c *RedisClient) GetConfigString(instance string, group string, field string) string {
+	keyInst := fmt.Sprintf("cfg_%v_%v_%v", group, instance, field)
+	val := c.Get(keyInst)
+	return val
+}
 
-	return ""
+func (c *RedisClient) GetGtwConfigString(instance string, field string) string {
+	return c.GetConfigString(instance, "gateway_config", field)
 }
 
 func (c *RedisClient) SAdd(key string, value string) {
