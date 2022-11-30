@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/pubsub v1.26.0
 	github.com/bsm/redislock v0.8.2
 	github.com/denisenkom/go-mssqldb v0.12.3
-	github.com/go-redis/redis/v8 v8.11.5
+	github.com/go-redis/redis/v9 v9.0.0-rc.1
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
 	github.com/olivere/elastic/v7 v7.0.32
 	github.com/sirupsen/logrus v1.9.0
@@ -18,7 +18,6 @@ require (
 	cloud.google.com/go/iam v0.5.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/go-redis/redis/v9 v9.0.0-rc.1 // indirect
 	github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect

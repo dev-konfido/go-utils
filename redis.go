@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/bsm/redislock"
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis/v9"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -44,6 +44,7 @@ func (c *RedisClient) connect() {
 		panic(err)
 	}
 	log.Info("Redis ok: ", pong)
+
 
 	// Create a new lock client.
 	c.Locker = redislock.New(c.ServerClient)
