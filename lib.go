@@ -68,7 +68,16 @@ func DateToISO(date time.Time) string {
 }
 
 func IsoToDate(date string) (time.Time, error) {
-	ret, err := time.Parse("2006-01-02T15:04:05.000Z07:00", date)
+	var ret time.Time
+	var err error
+
+	size := len(date)
+	if size == 20 {
+		ret, err = time.Parse("2006-01-02T15:04:05Z07:00", date)
+	} else {
+		ret, err = time.Parse("2006-01-02T15:04:05.000Z07:00", date)
+	}
+
 	if err != nil {
 		return ret, fmt.Errorf("erro convertendo data: %v", err)
 	}
@@ -78,7 +87,16 @@ func IsoToDate(date string) (time.Time, error) {
 var timezonesCache map[string]*time.Location = make(map[string]*time.Location)
 
 func IsoToLocalDate(date string, timezone string) (time.Time, error) {
-	ret, err := time.Parse("2006-01-02T15:04:05.000Z07:00", date)
+	var ret time.Time
+	var err error
+
+	size := len(date)
+	if size == 20 {
+		ret, err = time.Parse("2006-01-02T15:04:05Z07:00", date)
+	} else {
+		ret, err = time.Parse("2006-01-02T15:04:05.000Z07:00", date)
+	}
+
 	if err != nil {
 		return ret, fmt.Errorf("erro convertendo data: %v", err)
 	}
@@ -120,7 +138,8 @@ func FormatDateWithoutTZ(isoDate string, timezone string) string {
 func GetTimezoneLocation(timezone string) *time.Location {
 	tz := timezonesCache[timezone]
 	if tz == nil {
-		tz, err := time.LoadLocation(timezone)
+		var err error
+		tz, err = time.LoadLocation(timezone)
 		if err != nil {
 			log.Printf("GetTimezoneLocation - erro load location: %v", err)
 		}
