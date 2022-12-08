@@ -26,13 +26,13 @@ func AESDecrypt(key []byte, aesIV []byte, ciphertext []byte) []byte {
 func AESEncrypt(key []byte, aesIV []byte, plaintext []byte) []byte {
 
 	if len(plaintext)%aes.BlockSize != 0 {
-		log.Warn(text, "plaintext is not a multiple of the block size")
+		log.Warn(string(plaintext), "plaintext is not a multiple of the block size")
 		return []byte{}
 	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		log.Error(text, err)
+		log.Error(string(plaintext), err)
 		return []byte{}
 	}
 
