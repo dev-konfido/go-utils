@@ -4,37 +4,26 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/hex"
-	"fmt"
 	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func AESDecrypt(keyHex string, aesIVHex string, ciphertext []byte) string {
-	key, _ := hex.DecodeString(keyHex)
-
+func AESDecrypt(key []byte, aesIV []byte, ciphertext []byte) []byte {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		log.Error(string(ciphertext), err)
-		return ""
+		return []byte{}
 	}
 
-	iv, err := hex.DecodeString(aesIVHex)
-	if err != nil {
-		log.Error(string(ciphertext), err)
-		return ""
-	}
-
-	mode := cipher.NewCBCDecrypter(block, iv)
+	mode := cipher.NewCBCDecrypter(block, aesIV)
 	mode.CryptBlocks(ciphertext, ciphertext)
 
-	return fmt.Sprintf("%s", ciphertext)
+	return ciphertext
 }
 
-func AESEncrypt(keyHex string, aesIVHex string, text string) []byte {
-	plaintext := []byte(text)
-	key, _ := hex.DecodeString(keyHex)
+func AESEncrypt(key []byte, aesIV []byte, plaintext []byte) []byte {
 
 	if len(plaintext)%aes.BlockSize != 0 {
 		log.Warn(text, "plaintext is not a multiple of the block size")
@@ -48,12 +37,7 @@ func AESEncrypt(keyHex string, aesIVHex string, text string) []byte {
 	}
 
 	ciphertext := make([]byte, len(plaintext))
-	iv, err := hex.DecodeString(aesIVHex)
-	if err != nil {
-		log.Error(text, err)
-		return []byte{}
-	}
-	mode := cipher.NewCBCEncrypter(block, iv)
+	mode := cipher.NewCBCEncrypter(block, aesIV)
 
 	mode.CryptBlocks(ciphertext, plaintext)
 
