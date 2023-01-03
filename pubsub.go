@@ -6,6 +6,7 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/api/option"
 )
 
 type PubSubClient struct {
@@ -16,31 +17,43 @@ type PubSubClient struct {
 }
 
 func GetPubSubClient(projectID string, topicOut string) *PubSubClient {
+	return initAndConnect(projectID, topicOut, []byte{})
+}
+
+func GetPubSubClientWithJSONCredentials(projectID string, topicOut string, jsonCredentials []byte) *PubSubClient {
+	return initAndConnect(projectID, topicOut, jsonCredentials)
+}
+
+func initAndConnect(projectID string, topicOut string, jsonCredentials []byte) *PubSubClient {
 	client := PubSubClient{}
 
 	client.Topics = map[string]*pubsub.Topic{}
 	client.ProjectID = projectID
 	client.DefaultTopicName = topicOut
 
-	client.connect()
+	client.connect(jsonCredentials)
 
 	return &client
 }
 
-func (cli *PubSubClient) connect() {
-	log.Info("Connecting to pub sub...", cli.ProjectID, cli.DefaultTopicName)
+func (cli *PubSubClient) connect(jsonCredentials []byte) {
+	log.Debug("Connecting to pub sub...", cli.ProjectID, cli.DefaultTopicName)
 
 	ctx := context.Background()
 	var err error
-	cli.ServerClient, err = pubsub.NewClient(ctx, cli.ProjectID)
+	if len(jsonCredentials) > 0 {
+		cli.ServerClient, err = pubsub.NewClient(ctx, cli.ProjectID, option.WithCredentialsJSON(jsonCredentials))
+	} else {
+		cli.ServerClient, err = pubsub.NewClient(ctx, cli.ProjectID)
+	}
 	if err != nil {
-		log.Error("pubsub.NewClient: ", err)
+		log.Error("pubsub.NewClient: ", cli.ProjectID, cli.DefaultTopicName, err)
 		panic(err)
 	}
 
 	cli.Topics[cli.DefaultTopicName] = cli.ServerClient.Topic(cli.DefaultTopicName)
 
-	log.Info("Pub sub ok.")
+	log.Info("Pub sub ok.", cli.ProjectID, cli.DefaultTopicName)
 
 }
 
