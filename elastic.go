@@ -12,9 +12,9 @@ import (
 )
 
 type ElasticClient struct {
-	Client           *elastic.Client
-	Host             string
-	BulkInsertClient *elastic.BulkProcessor
+	Client            *elastic.Client
+	Host              string
+	BulkRequestClient *elastic.BulkProcessor
 }
 
 type basicAuthTransport struct {
@@ -80,30 +80,35 @@ func (elCli *ElasticClient) CreateIndexIfNotExists(indexName string, settings st
 
 func (elCli *ElasticClient) Close() {
 	elCli.Client.Stop()
-	if elCli.BulkInsertClient != nil {
-		elCli.BulkInsertClient.Close()
+	if elCli.BulkRequestClient != nil {
+		elCli.BulkRequestClient.Close()
 	}
 }
 
-func (elCli *ElasticClient) InitializeBulkInsert(qtyWorkers int, bufferSize int, bulkSize int, flushInterval time.Duration) error {
+func (elCli *ElasticClient) InitializeBulkRequest(qtyWorkers int, bufferSize int, bulkSize int, flushInterval time.Duration) error {
 
-	bulkInsert, err := elCli.Client.BulkProcessor().
-		Name("bulk-insert-elk").
+	bulkRequest, err := elCli.Client.BulkProcessor().
+		Name("bulk-request-elk").
 		Workers(qtyWorkers).
 		BulkActions(bufferSize).                    // commit if # requests >= bufferSize
 		BulkSize(bulkSize).                         // commit if size of requests >= bulkSize
-		FlushInterval(flushInterval * time.Second). // commit every 15s
+		FlushInterval(flushInterval * time.Second). // commit every n seconds
 		Do(context.Background())
 	if err != nil {
 		return err
 	}
 
-	elCli.BulkInsertClient = bulkInsert
+	elCli.BulkRequestClient = bulkRequest
 
 	return nil
 }
 
-func (elCli *ElasticClient) AddBulkRequest(index string, msg string) {
+func (elCli *ElasticClient) AddBulkRequest(index string, msg interface{}) {
 	r := elastic.NewBulkIndexRequest().Index(index).Doc(msg)
-	elCli.BulkInsertClient.Add(r)
+	elCli.BulkRequestClient.Add(r)
+}
+
+func (elCli *ElasticClient) AddBulkUpdateRequest(index string, id string, msg interface{}, upsert bool) {
+	r := elastic.NewBulkUpdateRequest().Index(index).Id(id).Doc(msg).DocAsUpsert(upsert)
+	elCli.BulkRequestClient.Add(r)
 }
