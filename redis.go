@@ -59,9 +59,18 @@ func (c *RedisClient) Del(key string) {
 	c.ServerClient.Del(ctx, key)
 }
 
-func (c *RedisClient) RPush(key string, values ...interface{}) {
-	ctx := context.Background()
-	c.ServerClient.RPush(ctx, key, values...)
+func (c *RedisClient) RPush(ctx context.Context, key string, values ...interface{}) error {
+	if _, err := c.ServerClient.RPush(ctx, key, values...).Result(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *RedisClient) LPush(ctx context.Context, key string, values ...interface{}) error {
+	if _, err := c.ServerClient.LPush(ctx, key, values...).Result(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *RedisClient) Set(key string, value interface{}, expTime time.Duration) {
@@ -97,6 +106,18 @@ func (c *RedisClient) LPop(key string) string {
 		res = ""
 	}
 	return res
+}
+
+func (c *RedisClient) BLPop(ctx context.Context, key string, timeout time.Duration) (string, error) {
+	ret := ""
+	res, err := c.ServerClient.BLPop(ctx, timeout, key).Result()
+	if err != nil {
+		return "", err
+	}
+	if len(res) > 0 {
+		ret = res[0]
+	}
+	return ret, nil
 }
 
 func (c *RedisClient) GetBin(key string) []byte {
