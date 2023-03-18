@@ -114,8 +114,8 @@ func (c *RedisClient) BLPop(ctx context.Context, key string, timeout time.Durati
 	if err != nil {
 		return "", err
 	}
-	if len(res) > 0 {
-		ret = res[0]
+	if len(res) > 1 {
+		ret = res[1]
 	}
 	return ret, nil
 }
