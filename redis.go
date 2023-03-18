@@ -19,17 +19,17 @@ type RedisClient struct {
 	Locker       *redislock.Client
 }
 
-func GetRedisClient(serverURL string, env string) *RedisClient {
+func GetRedisClient(serverURL string, env string, connectionPoolSize int) *RedisClient {
 	client := RedisClient{}
 
 	client.Environment = env
 	client.Host = serverURL
 
-	client.connect()
+	client.connect(connectionPoolSize)
 	return &client
 }
 
-func (c *RedisClient) connect() {
+func (c *RedisClient) connect(connectionPoolSize int) {
 
 	ctx := context.Background()
 
@@ -38,13 +38,13 @@ func (c *RedisClient) connect() {
 		Addr:     c.Host,
 		Password: "",
 		DB:       0, // use default DB
+		PoolSize: connectionPoolSize,
 	})
 	pong, err := c.ServerClient.Ping(ctx).Result()
 	if err != nil {
 		panic(err)
 	}
 	log.Info("Redis ok: ", pong)
-
 
 	// Create a new lock client.
 	c.Locker = redislock.New(c.ServerClient)
