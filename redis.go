@@ -120,6 +120,10 @@ func (c *RedisClient) BLPop(ctx context.Context, key string, timeout time.Durati
 	return ret, nil
 }
 
+func (c *RedisClient) LLen(ctx context.Context, key string) (int64, error) {
+	return c.ServerClient.LLen(ctx, key).Result()
+}
+
 func (c *RedisClient) GetBin(key string) []byte {
 	ctx := context.Background()
 	val := c.ServerClient.Get(ctx, key)
