@@ -22,7 +22,7 @@ func StrToInt(str string) int64 {
 func StrToFloat(str string) float64 {
 	ret, err := strconv.ParseFloat(str, 64)
 	if err != nil {
-		log.Error("Erro str to float", str, err)
+		log.Debug("Erro str to float", str, err)
 		ret = 0
 	}
 	return ret
